@@ -96,7 +96,8 @@ premiados_hall_of_fame <- AwardsPlayers %>%
                                       cyya = sum(awardID == "Cy Young Award"))
 head(premiados_hall_of_fame, 5)
 
-# 5) Assim criamos quatro conjuntos de dados e precisaremos fazer o cruzamento das informacoes em: 
+# 5) Assim criamos quatro conjuntos de dados e precisaremos fazer o cruzamento das 
+# informacoes em: 
 
 # * indicados_hall_of_fame  
 # * rebatedores_hall_of_fame
@@ -125,7 +126,10 @@ head(candidatos, 5)
 # a base de dados que utilizaremos para criar o modelo.
 
 model <- rpart::rpart(as.factor(indicado) ~ somaH + somaHR + mvp + somaW + somaSO + 
-                 somaSV + gg+ cyya, data=candidatos)
+                      somaSV + gg+ cyya, 
+                      data=candidatos,
+                      method = 'class') # esse parametro é para indicar que é 
+                                        # uma Classification Tree.
 prp(model)
 
 # O comando abaixo nos permite analisar a quantidade de observações por nó folha existente 
@@ -135,12 +139,79 @@ rpart.plot(model,type = 3)
 # Como podemos observar a árvore resultante está um pouco complicada de 
 # interpretar e visualizar, podemos concluir que esta árvovre está 
 # "overfitted" (muito ajustada). Para evitar o excesso de ajuste podemos 
-# alterar o tamanho do minbucket, minsplit ou maxdepth.
+# alterar os HIPERPARÂMETROS: tamanho do minbucket, minsplit ou maxdepth.
 
 
 
+##############################################################
+# Construindo uma Árvore de Regressão
+
+# Para esta construção usaremos o dataset chamado Hitters do pacote ISLR, que pode ser 
+# obtido em: https://cran.r-project.org/web/packages/ISLR/index.html.
+
+dim(Hitters)
+Hitters %>% head
+
+# Para construir essa árvore de regressão usarei as variáveis preditoras HomeRuns (HmRun)
+# e Anos Jogados "Years" para prever o SALÁRIO de um determinado jogador.
+
+# para isso usaremos somente os pacotes:
+# 1- rpart:      para ajustar a biblioteca de árvores de decisão;
+# 2- rpart.plot: para plotar árvores de decisão;
+
+# PASSO -1) Primeiro construiremos uma grande árvore de regressão inicial. Podemos 
+# garantir que essa árvores seja grande o suficiente atribuindo um valor pequeno para 
+# o hiperparâmetro CP "complexity parameter".
+
+# construção da árvore:
+tree <- rpart::rpart(Salary ~ Years + HmRun, data=Hitters, 
+                     control = rpart.control(cp = .0001))
+
+# impressão dos resultados obtidos.
+printcp(tree)
+
+# Plotando a árvore recém criada:
+paleta = scales::viridis_pal(begin=.75, end=1)(20)
+rpart.plot::rpart.plot(tree,
+                       box.palette = paleta) # Paleta de cores
+
+# Como resultado temos uma árvore com 19 Folhas, temos que reduzir esse overfitting.
+# Para isso temos que encontrar o valor ideal para o parâmetro CP "complexity parameter".
+# Sendo assim o valor ideal para o CP é aquele que leva ao menor xerror da saída.
+
+#tree$cptable
+
+valorIdeal_cp <- tree$cptable[which.min(tree$cptable[,"xerror"]), "CP"]
+valorIdeal_cp
+
+# produz uma árvore de regressão podada usando o melhor para CP com base no menor 
+# valor de xerror.
+pruned_tree <- prune(tree, cp = valorIdeal_cp)
+
+#plotando a árvore resultante.
+prp(pruned_tree, 
+    faclen = 0,    # use nomes completos para rótulos de fatores
+    extra = 1,     # exibe o numero de observacoes para cada nó terminal
+    roundint = F,  # não arredonda para inteiros   
+    digits = 5 )   #exibe 5 casas decimais na saída
 
 
+# Como pode ser o observado na plotagem da árvore, temos 6 nós terminais, onde cada 
+# mostra o salário previsto do jogador naquele nó junto com o número de observações 
+# do conjunto de dados original que pertencem a essa nota.
 
+# Agora podemos usar a árvore resultante para fazer PREVISÕES:
 
+# 1-) Podemos ver no conjunto primeiro nó terminal de dados originado que há 
+# 90 jogadores com menos de 4,5 anos de experiência e seu salário médio é era
+# de US$ 225.83 mil.
+
+# 2-) Podemos observar também que um jogador com 7 anos de experiência e com 
+# uma média de 4 home runs tem um salário PREVISTO de US$ 502.81k
+
+# Nós podemos usar a função predict do R para confirmar isto:
+df_prova_real <- data.frame(Years = 7, HmRun=4)
+
+# Usando a árvore podada para predizer o salário desse jogador.
+predict(pruned_tree, newdata = df_prova_real)
 
