@@ -214,9 +214,5 @@ df_prova_real <- data.frame(Years = 7, HmRun=4)
 
 # Usando a árvore podada para predizer o salário desse jogador.
 predict(pruned_tree, newdata = df_prova_real)
-# Resultaado do comando acima: US$502.8079k
+# Resultado do comando acima: US$502.8079k
 
-
-
-###################################################################
-#   Melhorando nosso modelo de 
