@@ -144,7 +144,7 @@ rpart.plot(model,type = 3)
 
 
 ##############################################################
-# Construindo uma Árvore de Regressão
+# Construindo uma Árvore de Regressão com redução de Overfitting.
 
 # Para esta construção usaremos o dataset chamado Hitters do pacote ISLR, que pode ser 
 # obtido em: https://cran.r-project.org/web/packages/ISLR/index.html.
@@ -193,7 +193,7 @@ prp(pruned_tree,
     faclen = 0,    # use nomes completos para rótulos de fatores
     extra = 1,     # exibe o numero de observacoes para cada nó terminal
     roundint = F,  # não arredonda para inteiros   
-    digits = 5 )   #exibe 5 casas decimais na saída
+    digits = 5 )   # exibe 5 casas decimais na saída
 
 
 # Como pode ser o observado na plotagem da árvore, temos 6 nós terminais, onde cada 
@@ -214,4 +214,9 @@ df_prova_real <- data.frame(Years = 7, HmRun=4)
 
 # Usando a árvore podada para predizer o salário desse jogador.
 predict(pruned_tree, newdata = df_prova_real)
+# Resultaado do comando acima: US$502.8079k
 
+
+
+###################################################################
+#   Melhorando nosso modelo de 
